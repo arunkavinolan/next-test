@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
+import {SendHorizontal} from 'lucide-react';
 
 const STORAGE_KEY = 'chat-ui-v1';
 
@@ -27,7 +28,7 @@ export default function Main1() {
   const inputRef = useRef(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);  //mobile-sidebar-toggle
- 
+  const [dropdownChatId,setDropdownChatId] = useState('null'); //dropdown-track
 
   
   function makeId() {
@@ -74,12 +75,17 @@ export default function Main1() {
     setActiveChatId (newChat.id)
     if (window.innerWidth < 768) {
       setIsSidebarOpen(false)
-    }  // close-sidebar-increases
+    }  // close-sidebar-increases 
+
+   
   }
 
   function deleteChat(id) {
     setChats(prev => prev.filter(c => c.id !== id))
-    if (id === activeChatId) setActiveChatId(null)
+    if (id === activeChatId) {
+      setActiveChatId(null) 
+      setDropdownChatId(null) // close dropdown
+    }  
   }
 
   function appendMessage(chatId, message) {
@@ -94,9 +100,9 @@ export default function Main1() {
     setIsTyping(true)
 
     const simulatedResponse = `Here is a helpful response to "${text}". 
-    ]0.
+    
 This is the very good question.You are smart buddy
-- Tip 2
+- Tip 1
 If you want more detail about this topic, I can give the server API route link to you.`
 
     const assistantId = makeId()
@@ -140,13 +146,27 @@ If you want more detail about this topic, I can give the server API route link t
   }
 
   function renameChat(id, title) {
-    setChats(prev => prev.map(c => (c.id === id ? { ...c, title } : c)))
+    setChats(prev => prev.map(c => (c.id === id ? { ...c, title } : c)));
+    setDropdownChatId(null);
+
   }
 
   
   function toggleSidebar() {
     setIsSidebarOpen(prev => !prev)
   }
+   const handleDropdownToggle = (chatId) => {
+    setDropdownChatId(chatId === dropdownChatId ? null : chatId);
+  };
+
+  const handleRename = (chatId) => {
+    const t = prompt('Chat title', chats.find(c => c.id === chatId)?.title || '');
+    if (t !== null) renameChat(chatId, t);
+  };
+
+  const handleDelete = (chatId) => {
+    if (confirm('Delete chat?')) deleteChat(chatId);
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col md:flex-row"> 
@@ -165,10 +185,35 @@ If you want more detail about this topic, I can give the server API route link t
                     <div className="truncate">{chat.title || 'Untitled'}</div>
                     <div className="text-xs text-gray-400 truncate">{chat.messages[chat.messages.length - 1]?.text?.slice(0, 40) || 'No messages'}</div>
                   </div>
-                  <div className="ml-2 flex items-center gap-1">
-                    <button title="Rename" onClick={() => { const t = prompt('Chat title', chat.title || ''); if (t !== null) renameChat(chat.id, t) }} className="text-sm">✏️</button>
-                    <button title="Delete" onClick={() => { if (confirm('Delete chat?')) deleteChat(chat.id) }} className="text-sm">🗑️</button>
+                  
+                   <div className="ml-2 flex items-center gap-1 relative">
+                    <button 
+                      title="Options" 
+                      onClick={(e) => { e.stopPropagation(); handleDropdownToggle(chat.id); }} 
+                      className="text-sm p-1 hover:bg-gray-700 rounded"
+                    >
+                      ...
+                    </button>
+                    {dropdownChatId === chat.id && (
+                      <div className="absolute right-0 top-full mt-1 w-24 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10">
+                        <div className="flex flex-col">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleRename(chat.id); }} 
+                            className="px-3 py-2 text-sm text-left hover:bg-gray-600 rounded-t-md w-full"
+                          >
+                            Rename
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDelete(chat.id); }} 
+                            className="px-3 py-2 text-sm text-left hover:bg-gray-600 rounded-b-md w-full text-red-400"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
+
                 </div>
               ))}
             </nav> 
@@ -211,10 +256,33 @@ If you want more detail about this topic, I can give the server API route link t
                 <div className="truncate">{chat.title || 'Untitled'}</div>
                 <div className="text-xs text-gray-400 truncate">{chat.messages[chat.messages.length - 1]?.text?.slice(0, 40) || 'No messages'}</div>
               </div>
-              <div className="ml-2 flex items-center gap-1">
-                <button title="Rename" onClick={() => { const t = prompt('Chat title', chat.title || ''); if (t !== null) renameChat(chat.id, t) }} className="text-sm">✏️</button>
-                <button title="Delete" onClick={() => { if (confirm('Delete chat?')) deleteChat(chat.id) }} className="text-sm">🗑️</button>
-              </div>
+               <div className="ml-2 flex items-center gap-1 relative">
+                    <button 
+                      title="Options" 
+                      onClick={(e) => { e.stopPropagation(); handleDropdownToggle(chat.id); }} 
+                      className="text-sm p-1 hover:bg-gray-700 rounded"
+                    >
+                      ...
+                    </button>
+                    {dropdownChatId === chat.id && (
+                      <div className="absolute right-0 top-full mt-1 w-24 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10">
+                        <div className="flex flex-col">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleRename(chat.id); }} 
+                            className="px-3 py-2 text-sm text-left hover:bg-gray-600 rounded-t-md w-full"
+                          >
+                            Rename
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDelete(chat.id); }} 
+                            className="px-3 py-2 text-sm text-left hover:bg-gray-600 rounded-b-md w-full text-red-400"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
             </div>
           ))}
         </nav>
@@ -233,7 +301,7 @@ If you want more detail about this topic, I can give the server API route link t
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-2xl md:text-3xl font-semibold flex-1">Hi Arunkavi! Good Night<span aria-hidden>🌤️</span></h1>
+            <h1 className="text-2xl md:text-3xl font-semibold flex-1"> Hi Arunkavi! Good Night <span aria-hidden>🌤️</span></h1>
           </header> 
 
 
@@ -319,7 +387,10 @@ If you want more detail about this topic, I can give the server API route link t
                 placeholder="Ask Here..." aria-label="chat input"
               />
 
-              <button type="submit" className="ml-1 md:ml-3 bg-blue-600 hover:bg-blue-500 rounded-full p-1 md:p-2"> Send </button>  
+              <button  type='sumbit' className='bg-blue-600 hover:bg-blue-500 rounded-full p-2 ml-1 md:ml-3 md:p-3 flex items-center justify-content'>
+                <SendHorizontal />
+              </button>
+
             </div>
           </form>
         </div>

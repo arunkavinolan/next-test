@@ -11,7 +11,7 @@ export default function LoginPage() {
     if (!token.trim()) {
       alert("Please enter a token to Login!");
       return;
-    }
+    } 
     router.replace('/chat');
     console.log("Login in with token:", token);
   };
@@ -32,7 +32,7 @@ export default function LoginPage() {
         <button type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors">
               Login
-        </button>
+        </button> 
       </form>
     </div>
   )
